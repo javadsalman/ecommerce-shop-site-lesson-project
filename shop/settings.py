@@ -154,3 +154,5 @@ AWS_S3_CUSTOM_DOMAIN = '{}.s3.{}.amazonaws.com'.format(
     AWS_STORAGE_BUCKET_NAME,
     AWS_S3_REGION_NAME
 )
+
+LOGIN_URL = 'customer:login'

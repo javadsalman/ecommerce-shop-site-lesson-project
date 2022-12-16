@@ -8,12 +8,10 @@ class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     def __str__(self):
         return self.user.get_full_name()
-    
-    # def __repr__(self):
-    #     return self.user.get_full_name()
 
 
-class Wishlist(models.Model):
+
+class Wish(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     product = models.ForeignKey('ecommerce.Product', on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
@@ -22,13 +20,16 @@ class Wishlist(models.Model):
         return f'{self.customer} - {self.product}'
     
     
-class Bascet(models.Model):
+class BascetItem(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     product = models.ForeignKey('ecommerce.Product', on_delete=models.CASCADE)
     size = models.ForeignKey('ecommerce.Size', on_delete=models.CASCADE, null=True, blank=True)
     color = models.ForeignKey('ecommerce.Color', on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.IntegerField(default=1, validators=[MinValueValidator(1)])
     created = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created']
 
     def __str__(self):
         return f'{self.customer} - {self.product} - {self.quantity}'
@@ -53,5 +54,11 @@ class Order(models.Model):
         return f'{self.customer}'
 
     
-
+class Contact(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100)
+    subject = models.CharField(max_length=100)
+    message = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+    
     

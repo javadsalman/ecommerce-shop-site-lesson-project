@@ -31,31 +31,13 @@
                         </tr>
                     </thead>
                     <tbody class="align-middle">
-                        <tr>
-                            <td class="align-middle"><img src="{% static 'img/product-1.jpg' %}" alt="" style="width: 50px;"> Product Name</td>
-                            <td class="align-middle">$150</td>
-                            <td class="align-middle"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></td>
-                        </tr>
-                        <tr>
-                            <td class="align-middle"><img src="{% static 'img/product-2.jpg' %}" alt="" style="width: 50px;"> Product Name</td>
-                            <td class="align-middle">$150</td>
-                            <td class="align-middle"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></td>
-                        </tr>
-                        <tr>
-                            <td class="align-middle"><img src="{% static 'img/product-3.jpg' %}" alt="" style="width: 50px;"> Product Name</td>
-                            <td class="align-middle">$150</td>
-                            <td class="align-middle"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></td>
-                        </tr>
-                        <tr>
-                            <td class="align-middle"><img src="{% static 'img/product-4.jpg' %}" alt="" style="width: 50px;"> Product Name</td>
-                            <td class="align-middle">$150</td>
-                            <td class="align-middle"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></td>
-                        </tr>
-                        <tr>
-                            <td class="align-middle"><img src="{% static 'img/product-5.jpg' %}" alt="" style="width: 50px;"> Product Name</td>
-                            <td class="align-middle">$150</td>
-                            <td class="align-middle"><button class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button></td>
-                        </tr>
+                        {% for wish in wishlist %}
+                            <tr>
+                                <td class="align-middle"><img src="{{wish.product.images.first.image.url}}" alt="" style="width: 50px;"> {{wish.product.title}}</td>
+                                <td class="align-middle">{{wish.product.price}} AZN</td>
+                                <td class="align-middle"><a href="{% url 'customer:remove-wish' pk=wish.pk %}" class="btn btn-sm btn-danger"><i class="fa fa-times"></i></a></td>
+                            </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

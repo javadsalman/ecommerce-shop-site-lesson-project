@@ -9710,3 +9710,11 @@ a.text-dark:hover, a.text-dark:focus {
     transform: translateY(-15px);
   }
 }
+
+
+.product-image {
+  height: 350px;
+  width: 100%;
+  object-fit: cover;
+  object-position: top;
+}

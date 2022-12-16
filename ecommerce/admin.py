@@ -5,10 +5,22 @@ from .models import (
     Category,
     Product,
     ProductImage,
+    Campaign,
 )
 
 admin.site.register(Size)
 admin.site.register(Color)
 admin.site.register(Category)
-admin.site.register(Product)
+admin.site.register(Campaign)
 admin.site.register(ProductImage)
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    fields = ['image', 'image_tag', 'order']
+    readonly_fields = ['image_tag']
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    # fields = '__all__'
+    readonly_fields = ['slug', 'created']
+    inlines = [ProductImageInline]

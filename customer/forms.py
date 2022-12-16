@@ -1,5 +1,5 @@
 from django import forms
-from .models import Customer
+from .models import Customer, Contact
 from django.contrib.auth.models import User
 
 class RegisterForm(forms.Form):
@@ -41,3 +41,19 @@ class RegisterForm(forms.Form):
         )
         new_customer = Customer.objects.create(user=new_user)
         return new_customer
+    
+    
+class ContactForm(forms.ModelForm):
+    
+    class Meta:
+        model = Contact
+        fields = '__all__'
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Name', 'class': 'form-control'}),
+            'email': forms.TextInput(attrs={'placeholder': 'Email', 'class': 'form-control'}),
+            'subject': forms.TextInput(attrs={'placeholder': 'Subject', 'class': 'form-control'}),
+            'message': forms.Textarea(attrs={'placeholder': 'Message', 'class': 'form-control', 'rows': '8'}),
+        }
+        
+        
+        
