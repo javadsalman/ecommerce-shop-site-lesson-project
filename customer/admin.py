@@ -5,6 +5,9 @@ from .models import (
     BascetItem,
     Order,
     Contact,
+    Purchase,
+    Coupon,
+    OrderCoupon
 )
 
 # Register your models here.
@@ -12,5 +15,19 @@ from .models import (
 admin.site.register(Customer)
 admin.site.register(Wish)
 admin.site.register(BascetItem)
-admin.site.register(Order)
 admin.site.register(Contact)
+admin.site.register(Purchase)
+admin.site.register(Coupon)
+admin.site.register(OrderCoupon)
+
+
+class OrderCouponInline(admin.TabularInline):
+    model = OrderCoupon
+    extra = 0
+class PurchaseInline(admin.StackedInline):
+    model = Purchase
+    extra = 0
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    inlines = [OrderCouponInline, PurchaseInline]

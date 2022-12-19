@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
-
+from django.utils import timezone
 # Create your models here.
 
 class Customer(models.Model):
@@ -35,6 +35,18 @@ class BascetItem(models.Model):
         return f'{self.customer} - {self.product} - {self.quantity}'
 
 
+class Coupon(models.Model):
+    code = models.CharField(max_length=20)
+    discount_percent = models.FloatField()
+    expire = models.DateField()
+    used_customers = models.ManyToManyField(Customer, blank=True, related_name='used_coupons')
+    
+    def is_valid(self, customer):
+        return self.expire > timezone.localdate() and not customer in self.used_customers.all()
+    
+    def __str__(self):
+        return self.code
+
 CITY_CHOICES = [
     ('baku', 'Baki'),
     ('kurdamir', 'Kurdemir'),
@@ -42,16 +54,39 @@ CITY_CHOICES = [
 ]
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    address = models.CharField(max_length=200)
-    city = models.CharField(choices=CITY_CHOICES, max_length=50)
-    zipcode = models.CharField(max_length=10)
+    first_name = models.CharField(max_length=50, verbose_name='Ad *')
+    last_name = models.CharField(max_length=50, verbose_name='Soyad *')
+    email = models.EmailField(max_length=50, verbose_name='Email *')
+    address = models.CharField(max_length=200, verbose_name='Address *')
+    city = models.CharField(choices=CITY_CHOICES, max_length=50, verbose_name='Şəhər *')
+    phone = models.CharField(max_length=20, verbose_name='Telefon Nömrəsi *')
+    zipcode = models.CharField(max_length=10, verbose_name='Poçt Ünvanı *')
     created = models.DateTimeField(auto_now_add=True)
     accepted = models.BooleanField(default=False)
     delivered = models.BooleanField(default=False)
     canceled = models.BooleanField(default=False)
+    total_price = models.FloatField()
 
     def __str__(self):
         return f'{self.customer}'
+    
+class OrderCoupon(models.Model):
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='coupon')
+    coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
+    coupon_code = models.CharField(max_length=20, null=True, blank=True)
+    coupon_discount = models.FloatField(max_length=20, null=True, blank=True)
+    
+class Purchase(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    size = models.CharField(max_length=100)
+    color = models.CharField(max_length=100)
+    price = models.FloatField()
+    quantity = models.IntegerField()
+    title = models.CharField(max_length=100)
+    product = models.ForeignKey('ecommerce.Product', on_delete=models.SET_NULL, null=True)
+    all_price = models.FloatField()
+
+    
 
     
 class Contact(models.Model):

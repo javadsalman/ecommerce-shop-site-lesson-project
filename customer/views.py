@@ -1,14 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import (
-    RegisterForm, ContactForm
+    RegisterForm, ContactForm, CheckoutForm
 )
 from django.contrib.auth import login, logout, authenticate
 from ecommerce.models import Product
 from .models import (
-    Customer, Wish, BascetItem, Order
+    Customer, Wish, BascetItem, Order, Coupon
 )
 from django.contrib.auth.decorators import login_required
-from django.db.models import F
+from django.db.models import F, Sum
 
 # Create your views here.
 
@@ -22,11 +22,6 @@ def contact(request):
     return render(request, 'contact.html', context={'form': form})
 
 
-
-
-@login_required
-def checkout(request):
-    return render(request, 'checkout.html')
 
 def login_view(request):
     if request.method == 'GET':
@@ -113,9 +108,36 @@ def add_to_bascet(request, pk):
 
 @login_required
 def bascet(request):
-    bascet = request.user.customer.bascetitem_set.all()
+    coupon_code = request.GET.get('coupon_code')
+    coupon = Coupon.objects.filter(code=coupon_code).first()
+    customer = request.user.customer
+    bascet = customer.bascetitem_set.all()
     bascet = bascet.annotate(total_price=F('product__price') * F('quantity'))
-    return render(request, 'bascet.html', context={'bascet': bascet})
+    total_bascet_price = bascet.aggregate(total_bascet_price=Sum('total_price')).get('total_bascet_price')
+    shipping_price = total_bascet_price * 0.07
+    total_price = total_bascet_price + shipping_price
+
+    coupon_discount = None
+    total_price_with_coupon = None
+    if coupon:
+        coupon_discount = total_price * coupon.discount_percent / 100
+        total_price_with_coupon = total_price - coupon_discount
+        
+    print('BASCET', bool(coupon_code and (not coupon or not coupon.is_valid(customer))))
+    context = {
+        'bascet': bascet, 
+        'total_bascet_price': total_bascet_price,
+        'coupon_discount': coupon_discount,
+        'shipping_price': shipping_price,
+        'coupon': coupon,
+        'total_price': total_price,
+        'total_price_with_coupon': total_price_with_coupon,
+        'coupon_found_and_is_valid': coupon and coupon.is_valid(customer),
+        'coupone_code_exists_but_coupone_not_found_or_coupon_is_not_valid': bool(coupon_code and (not coupon or not coupon.is_valid(customer))),
+        'coupon_code': coupon_code
+    }
+    
+    return render(request, 'bascet.html', context=context)
 
 @login_required
 def update_bascet_quantity(request, pk):
@@ -124,3 +146,58 @@ def update_bascet_quantity(request, pk):
     bascet.quantity = quantity
     bascet.save()
     return redirect('customer:bascet')
+
+@login_required
+def remove_bascet(request, pk):
+    get_object_or_404(BascetItem, pk=pk).delete()
+    return redirect('customer:bascet')
+
+@login_required
+def checkout(request):
+    user = request.user
+    form = CheckoutForm(initial={'first_name': user.first_name, 'last_name': user.last_name, 'email': user.email})
+    customer = request.user.customer
+    coupon_code = request.GET.get('coupon_code')
+    coupon = Coupon.objects.filter(code=coupon_code).first()
+    bascet = customer.bascetitem_set.all()
+    bascet = bascet.annotate(total_price=F('product__price') * F('quantity'))
+    total_bascet_price = bascet.aggregate(total_bascet_price=Sum('total_price')).get('total_bascet_price')
+    shipping_price = total_bascet_price * 0.07
+    total_price = total_bascet_price + shipping_price
+
+    coupon_discount = None
+    total_price_with_coupon = None
+    if coupon:
+        coupon_discount = total_price * coupon.discount_percent / 100
+        total_price_with_coupon = total_price - coupon_discount
+
+    coupon_found_and_is_valid = coupon and coupon.is_valid(customer)
+    coupone_code_exists_but_coupone_not_found_or_coupon_is_not_valid = bool(coupon_code and (not coupon or not coupon.is_valid(customer))),
+
+
+    if request.method == 'POST':
+        form = CheckoutForm(data=request.POST)
+        if form.is_valid():
+            order = form.save(
+                customer, 
+                total_price, 
+                coupon, 
+                coupon_found_and_is_valid, 
+                total_price_with_coupon)
+            return redirect('ecommerce:home')
+        
+    context = {
+        'form': form,
+        'bascet': bascet, 
+        'total_bascet_price': total_bascet_price,
+        'coupon_discount': coupon_discount,
+        'shipping_price': shipping_price,
+        'coupon': coupon,
+        'total_price': total_price,
+        'total_price_with_coupon': total_price_with_coupon,
+        'coupon_found_and_is_valid': coupon_found_and_is_valid,
+        'coupone_code_exists_but_coupone_not_found_or_coupon_is_not_valid': coupone_code_exists_but_coupone_not_found_or_coupon_is_not_valid,
+        'coupon_code': coupon_code
+    }
+    
+    return render(request, 'checkout.html', context)

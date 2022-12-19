@@ -1,6 +1,13 @@
 from django import forms
-from .models import Customer, Contact
 from django.contrib.auth.models import User
+from .models import  (
+    Customer, 
+    Contact, 
+    Order, 
+    Purchase, 
+    OrderCoupon,
+    BascetItem
+)
 
 class RegisterForm(forms.Form):
     username = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', }))
@@ -57,3 +64,60 @@ class ContactForm(forms.ModelForm):
         
         
         
+class CheckoutForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        exclude = ['customer', 'accepted', 'canceled', 'delivered', 'total_price']
+        
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Phone'}),
+            'address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Address'}),
+            'city': forms.Select(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
+            'zipcode': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Zip Code'}),
+        }
+        
+    def save(self, customer, total_price, coupon, coupon_valid, coupon_price):
+        cleaned_data = self.cleaned_data
+        
+        order = Order.objects.create(
+            customer = customer,
+            first_name = cleaned_data.get('first_name'),
+            last_name = cleaned_data.get('last_name'),
+            email = cleaned_data.get('email'),
+            address = cleaned_data.get('address'),
+            city = cleaned_data.get('city'),
+            phone = cleaned_data.get('phone'),
+            zipcode = cleaned_data.get('zipcode'),
+            total_price = coupon_price if coupon_valid else total_price
+        )
+        
+        if coupon_valid:
+            OrderCoupon.objects.create(
+                order = order,
+                coupon = coupon,
+                coupon_code = coupon.code,
+                coupon_discount = coupon.discount_percent
+            )
+            coupon.used_customers.add(customer)
+            
+        purchases = []
+        bascet = customer.bascetitem_set.all()
+        for bi in bascet:
+            purchase = Purchase(
+                order=order,
+                size=bi.size.title,
+                color=bi.color.title,
+                price=bi.product.price,
+                quantity=bi.quantity,
+                title=bi.product.title,
+                product=bi.product,
+                all_price=bi.product.price * bi.quantity
+            )
+            purchases.append(purchase)
+        Purchase.objects.bulk_create(purchases)
+        
+        bascet.delete()
+        return order
