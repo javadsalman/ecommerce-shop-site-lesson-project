@@ -30,7 +30,6 @@ def login_view(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
-        print('USER', user)
         if user:
             login(request, user)
             nextUrl = request.GET.get('next')
@@ -113,7 +112,7 @@ def bascet(request):
     customer = request.user.customer
     bascet = customer.bascetitem_set.all()
     bascet = bascet.annotate(total_price=F('product__price') * F('quantity'))
-    total_bascet_price = bascet.aggregate(total_bascet_price=Sum('total_price')).get('total_bascet_price')
+    total_bascet_price = bascet.aggregate(total_bascet_price=Sum('total_price')).get('total_bascet_price') or 0
     shipping_price = total_bascet_price * 0.07
     total_price = total_bascet_price + shipping_price
 
@@ -123,7 +122,6 @@ def bascet(request):
         coupon_discount = total_price * coupon.discount_percent / 100
         total_price_with_coupon = total_price - coupon_discount
         
-    print('BASCET', bool(coupon_code and (not coupon or not coupon.is_valid(customer))))
     context = {
         'bascet': bascet, 
         'total_bascet_price': total_bascet_price,
@@ -141,10 +139,13 @@ def bascet(request):
 
 @login_required
 def update_bascet_quantity(request, pk):
-    quantity = request.POST.get('quantity')
-    bascet = get_object_or_404(BascetItem, pk=pk)
-    bascet.quantity = quantity
-    bascet.save()
+    quantity = int(request.POST.get('quantity'))
+    bascetitem = get_object_or_404(BascetItem, pk=pk)
+    if quantity:
+        bascetitem.quantity = quantity
+        bascetitem.save()
+    else:
+        bascetitem.delete()
     return redirect('customer:bascet')
 
 @login_required

@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'ckeditor',
     'django_cleanup.apps.CleanupConfig',
     'imagekit',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
