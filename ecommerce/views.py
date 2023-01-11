@@ -1,10 +1,14 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import (
-    Product, Category, Campaign
+    Product, Category, Campaign, Color, Size, Review
 )
 from django.core.paginator import Paginator
-from django.db.models import Avg, F
-
+from django.db.models import Avg, F, Count, Max, Min
+from .filters import ProductFilter
+from django.contrib.postgres.search import TrigramWordSimilarity
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+from django.contrib.auth.decorators import login_required
+from .forms import ReviewForm
 
 # Create your views here.
 
@@ -21,12 +25,24 @@ def home(request):
 
 def product_list(request):
     current_page = request.GET.get('page', 1)
-    sorting = request.GET.get('sorting', '-created')
-    sorting = F(sorting[1:]).desc(nulls_last=True) if sorting[0] == '-' else F(sorting).asc(nulls_last=True)
+    sorting = request.GET.get('sorting')
     page_by = int(request.GET.get('page_by', 6))
     
-    all_products = Product.objects.all().annotate(avg_review=Avg('review__star_count')).order_by(sorting)
-    paginator = Paginator(all_products, page_by)
+    all_products = Product.objects.all()
+    if search:=request.GET.get('search'):
+        all_products = all_products.annotate(similarity=TrigramWordSimilarity(search, 'title_az'))\
+        .filter(similarity__gt=0.3).order_by('-similarity')
+        # vector = SearchVector('title_az', weight='A') + SearchVector('description', weight='B') + SearchVector('category__title', weight='C')
+        # all_products = all_products.annotate(rank=SearchRank(vector, SearchQuery(search), weights=[0.1, 0.5, 0.7, 0.8])).filter(rank__gte=0.3).order_by('-rank')
+    
+    
+    filter_result = ProductFilter(request.GET, all_products)
+    filtered_products = filter_result.qs
+    if sorting:
+        sorting = F(sorting[1:]).desc(nulls_last=True) if sorting[0] == '-' else F(sorting).asc(nulls_last=True)
+        filtered_products = filtered_products.annotate(avg_review=Avg('review__star_count')).order_by(sorting)
+        
+    paginator = Paginator(filtered_products, page_by)
     page = paginator.page(current_page)
     products = page.object_list
     
@@ -34,13 +50,47 @@ def product_list(request):
         'page': page,
         'paginator': paginator,
         'products': products,
+        'filter_result': filter_result,
+        'colors': Color.objects.all().annotate(count=Count('product')),
+        'sizes': Size.objects.all().annotate(count=Count('product')),
+        'price_info': Product.objects.all().aggregate(min_value=Min('price'), max_value=Max('price')),
     }
     
     return render(request, 'product-list.html', context)
 
 def product_detail(request, pk, slug):
     product = get_object_or_404(Product, pk=pk)
+
+    customer_review = None
+    reviews = product.review_set.all()
+    if request.user.is_authenticated:
+        customer_review = product.review_set.filter(customer=request.user.customer).first()
+        reviews = reviews.exclude(customer=request.user.customer)
+        
     context = {
         'product': product,
+        'customer_review': customer_review,
+        'reviews': reviews,
     }
+    
     return render(request, 'product-detail.html', context=context,)
+
+
+@login_required
+def review(request, pk):
+    if request.method == 'GET':
+        return redirect(product.get_absolute_url())
+    
+    product = get_object_or_404(Product, pk=pk)
+    customer = request.user.customer
+    form = ReviewForm(request.POST)
+    if form.is_valid():
+        form.save(customer, product)
+        
+    return redirect(product.get_absolute_url())
+    
+    
+    
+    
+    
+    

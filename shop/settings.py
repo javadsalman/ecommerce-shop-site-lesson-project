@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 from os import getenv
+from django.utils.translation import gettext_lazy as _
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
     # INTERNALS
     'ecommerce',
     'customer',
@@ -52,6 +55,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -117,7 +121,16 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
+
+
+LANGUAGES = [
+    ('az', _('Azerbaijani')),
+    ('tr', _('Turkish')),
+    ('en', _('English')),
+]
+
+LOCALE_PATHS = ['locale']
 
 TIME_ZONE = 'Asia/Baku'
 
@@ -133,6 +146,11 @@ STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
+]
+
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
 # Default primary key field type

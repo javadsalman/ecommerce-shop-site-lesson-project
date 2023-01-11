@@ -4,8 +4,12 @@ from ckeditor.fields import RichTextField
 from imagekit.models.fields import ProcessedImageField
 from django.contrib.admin import display
 from django.utils.html import format_html
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from .utils import convert_slug
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models import Avg
+from django.utils.translation import get_language, gettext, gettext_lazy as _
+
 
 # Create your models here.
 
@@ -36,6 +40,10 @@ class Category(models.Model):
     
     def is_super(self):
         return self.category_set.exists()
+    
+    def get_absolute_url(self):
+        return reverse('ecommerce:product-list') + f'?category={self.pk}'
+    
 
 
 
@@ -50,9 +58,14 @@ class Campaign(models.Model):
     def __str__(self):
         return self.title
     
+    def get_absolute_url(self):
+        return reverse('ecommerce:product-list') + f'?campaigns={self.pk}'
+    
 
 class Product(models.Model):
-    title = models.CharField(max_length=100)
+    title_az = models.TextField(max_length=100)
+    title_en = models.TextField(max_length=100, null=True, blank=True)
+    title_tr = models.TextField(max_length=100, null=True, blank=True)
     slug = models.SlugField(null=True, blank=True)
     description = RichTextField()
     old_price = models.FloatField(validators=[MinValueValidator(0.1)], null=True, blank=True)
@@ -64,6 +77,12 @@ class Product(models.Model):
     featured = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)
     
+    @property
+    def title(self):
+        lang = get_language()
+        title = getattr(self, 'title_' + lang)
+        return title or self.title_az
+    
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = convert_slug(self.title)
@@ -73,7 +92,20 @@ class Product(models.Model):
         return self.title
     
     def get_absolute_url(self):
-        return reverse('ecommerce:product-detail', kwargs={'pk': self.pk, 'slug': self.slug})
+        return reverse_lazy('ecommerce:product-detail', kwargs={'pk': self.pk, 'slug': self.slug})
+
+    @property
+    def average_star_count(self):
+        reviews = self.review_set.all()
+        if reviews:
+            result =  reviews.aggregate(average=Avg('star_count')).get('average')
+        else:
+            result = 0
+        return result
+    
+    class Meta:
+        verbose_name = _('Product')
+        verbose_name_plural = _('Products')
     
     
 class ProductImage(models.Model):
@@ -90,7 +122,10 @@ class ProductImage(models.Model):
     
     
 class Review(models.Model):
-    customer = models.ForeignKey('customer.Customer', on_delete=models.CASCADE)
+    customer = models.ForeignKey('customer.Customer', on_delete=models.CASCADE, validators=[MaxValueValidator(6), MinValueValidator(1)])
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     star_count = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
+    
+    

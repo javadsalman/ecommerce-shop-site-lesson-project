@@ -9,6 +9,10 @@ from .models import (
 )
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Sum
+import requests
+import os
+
+RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY')
 
 # Create your views here.
 
@@ -16,9 +20,17 @@ def contact(request):
     form = ContactForm()
     if request.method == 'POST':
         form = ContactForm(data=request.POST)
-        if form.is_valid():
+        response = requests.post(' https://www.google.com/recaptcha/api/siteverify', {
+            'secret': RECAPTCHA_SECRET_KEY,
+            'response': request.POST.get('g-recaptcha-response')
+        })
+        recaptcha_result = response.json()
+        success = recaptcha_result.get('success')
+        score = recaptcha_result.get('score')
+        if form.is_valid() and success and score > 0.7:
             form.save()
-            return redirect('ecommerce:home')
+            return render(request, 'contact.html', context={'form': ContactForm(), 'status': 'success'})
+        return render(request, 'contact.html', context={'form': form, 'status': 'fail'})
     return render(request, 'contact.html', context={'form': form})
 
 
@@ -29,10 +41,13 @@ def login_view(request):
     elif request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me')
         user = authenticate(username=username, password=password)
         if user:
             login(request, user)
             nextUrl = request.GET.get('next')
+            if not remember_me:
+                request.session.set_expiry(0)
             return redirect(nextUrl or 'ecommerce:home')
         return render(request, 'login.html', context={'unsuccess': True})
 
@@ -202,3 +217,10 @@ def checkout(request):
     }
     
     return render(request, 'checkout.html', context)
+
+
+currency_eq = {'USD': 0.59, 'TRY': 11.04, 'EUR': 0.56, 'AZN': 1}
+def change_currency(request, currency):
+    request.session['currency'] = currency
+    request.session['currency_ratio'] = currency_eq.get(currency)
+    return redirect(request.META.get('HTTP_REFERER'))

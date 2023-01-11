@@ -8,12 +8,12 @@
                         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">{{category.title}} <i class="fa fa-angle-right float-right mt-1"></i></a>
                         <div class="dropdown-menu position-absolute rounded-0 border-0 m-0">
                             {% for subcategory in category.category_set.all %}
-                                <a href="" class="dropdown-item">{{subcategory.title}}</a>
+                                <a href="{{subcategory.get_absolute_url}}" class="dropdown-item">{{subcategory.title}}</a>
                             {% endfor %}
                         </div>
                     </div>
                 {% else %}
-                    <a href="" class="nav-item nav-link">{{category.title}}</a>
+                    <a href="{{category.get_absolute_url}}" class="nav-item nav-link">{{category.title}}</a>
                 {% endif %}
             {% endif %}
         {% endfor %}

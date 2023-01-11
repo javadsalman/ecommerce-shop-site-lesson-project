@@ -28,5 +28,5 @@ class ReviewInline(admin.TabularInline):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     # fields = '__all__'
-    readonly_fields = ['slug', 'created']
+    readonly_fields = ['id', 'slug', 'created']
     inlines = [ProductImageInline, ReviewInline]

@@ -16,4 +16,5 @@ urlpatterns = [
     path('add-to-bascet/<int:pk>/', views.add_to_bascet, name='add-to-bascet'),
     path('update-bascet-quantity/<int:pk>/', views.update_bascet_quantity, name='update-bascet-quantity'),
     path('remove-bascet/<int:pk>/', views.remove_bascet, name='remove-bascet'),
+    path('change-currency/<str:currency>/', views.change_currency, name='change-currency'),
 ]

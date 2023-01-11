@@ -21,11 +21,21 @@
     <!-- Contact Start -->
     <div class="container-fluid">
         <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4"><span class="bg-secondary pr-3">Contact Us</span></h2>
+        
         <div class="row px-xl-5">
             <div class="col-lg-7 mb-5">
                 <div class="contact-form bg-light p-30">
+                        {% if status == 'success' %}
+                            <div class="alert alert-success" role="alert">
+                                Müraciətiniz uğurla göndərildi!
+                            </div>
+                        {% elif status == 'fail' %}
+                            <div class="alert alert-danger" role="alert">
+                                Müraciətinizin göndərilməsində xəta baş verdi!
+                            </div>
+                        {% endif %}
                     <p class="help-block text-danger">{{form.non_field_errors}}</p>
-                    <form method="POST">
+                    <form id="contact-form" method="POST">
                         {% csrf_token %}
                         {% for field in form %}
                             <div class="control-group mb-2">
@@ -36,8 +46,13 @@
                             </div>
                         {% endfor %}
                         <div>
-                            <button class="btn btn-primary py-2 px-4" type="submit" id="sendMessageButton">Send
-                                Message
+                            <button 
+                                class="btn btn-primary py-2 px-4 g-recaptcha" 
+                                data-sitekey="6LfGfOEjAAAAADHO54zCvNl-VYdXbo4m0Xe9_GNk" 
+                                data-callback='onSubmit' 
+                                data-action='submit'
+                                >
+                                    Send Message
                             </button>
                         </div>
                     </form>
@@ -60,3 +75,12 @@
     <!-- Contact End -->
 
 {% endblock main %}
+
+{% block scripts %}
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+    <script>
+        function onSubmit(token) {
+          document.getElementById("contact-form").submit();
+        }
+      </script>
+{% endblock scripts %}

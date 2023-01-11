@@ -1,0 +1,147 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-06 15:27+0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+#: .\ecommerce\templates\home.html:6 .\templates\layouts\layout.html:142
+#: .\templates\layouts\layout.html:190 .\templates\layouts\layout.html:201
+msgid "Home"
+msgstr ""
+
+#: .\ecommerce\templates\home.html:41 .\ecommerce\templates\home.html:129
+msgid "Save"
+msgstr ""
+
+#: .\ecommerce\templates\home.html:43 .\ecommerce\templates\home.html:131
+msgid "Shop Now"
+msgstr ""
+
+#: .\ecommerce\templates\home.html:59
+msgid "Quality Product"
+msgstr ""
+
+#: .\ecommerce\templates\home.html:65
+msgid "Free Shipping"
+msgstr ""
+
+#: .\ecommerce\templates\home.html:71
+msgid "14-Day Return"
+msgstr ""
+
+#: .\ecommerce\templates\home.html:77
+msgid "24/7 Support"
+msgstr ""
+
+#: .\ecommerce\templates\home.html:98
+msgid "Products"
+msgstr ""
+
+#: .\ecommerce\templates\home.html:111
+msgid "Featured Products"
+msgstr ""
+
+#: .\ecommerce\templates\home.html:143
+msgid "Recent Products"
+msgstr ""
+
+#: .\shop\settings.py:127
+msgid "Azerbaijani"
+msgstr ""
+
+#: .\shop\settings.py:128
+msgid "Turkish"
+msgstr ""
+
+#: .\shop\settings.py:129
+msgid "English"
+msgstr ""
+
+#: .\templates\layouts\layout.html:46 .\templates\layouts\layout.html:181
+msgid "Falanovski street filan 5"
+msgstr ""
+
+#: .\templates\layouts\layout.html:52
+msgid "My Account"
+msgstr ""
+
+#: .\templates\layouts\layout.html:55
+msgid "Logout"
+msgstr ""
+
+#: .\templates\layouts\layout.html:57
+msgid "Sign in"
+msgstr ""
+
+#: .\templates\layouts\layout.html:58
+msgid "Register"
+msgstr ""
+
+#: .\templates\layouts\layout.html:113
+msgid "Customer Service"
+msgstr ""
+
+#: .\templates\layouts\layout.html:126
+msgid "Categories"
+msgstr ""
+
+#: .\templates\layouts\layout.html:143
+msgid "Shop"
+msgstr ""
+
+#: .\templates\layouts\layout.html:144
+msgid "Contact"
+msgstr ""
+
+#: .\templates\layouts\layout.html:179
+msgid "Get In Touch"
+msgstr ""
+
+#: .\templates\layouts\layout.html:191 .\templates\layouts\layout.html:202
+msgid "Our Shop"
+msgstr ""
+
+#: .\templates\layouts\layout.html:192 .\templates\layouts\layout.html:203
+msgid "Shop Detail"
+msgstr ""
+
+#: .\templates\layouts\layout.html:193 .\templates\layouts\layout.html:204
+msgid "Shopping Cart"
+msgstr ""
+
+#: .\templates\layouts\layout.html:194 .\templates\layouts\layout.html:205
+msgid "Checkout"
+msgstr ""
+
+#: .\templates\layouts\layout.html:195 .\templates\layouts\layout.html:206
+msgid "Contact Us"
+msgstr ""
+
+#: .\templates\layouts\layout.html:210
+msgid "Newsletter"
+msgstr ""
+
+#: .\templates\layouts\layout.html:216
+msgid "Sign Up"
+msgstr ""
+
+#: .\templates\layouts\layout.html:220
+msgid "Follow Us"
+msgstr ""
+
+#: .\templates\layouts\layout.html:234
+msgid "All Rights Reserved. Designed"
+msgstr ""
