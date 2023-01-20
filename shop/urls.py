@@ -21,6 +21,7 @@ from django.views.generic import TemplateView
 from django.shortcuts import render
 from django.contrib.sitemaps.views import sitemap
 from .sitemaps import StaticViewSitemap, ProductSitemap
+from django.views.generic import TemplateView
 
 sitemaps = {
     'static': StaticViewSitemap,
@@ -29,7 +30,7 @@ sitemaps = {
 
 urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
-    path('robots.txt/', lambda request: render(request, 'robots.txt', content_type='text/plain')),
+    path('robots.txt/', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps},
      name='django.contrib.sitemaps.views.sitemap')
 ] + i18n_patterns(

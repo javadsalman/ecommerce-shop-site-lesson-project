@@ -1,0 +1,7 @@
+activate.bat
+__pycache__
+.vscode
+db.sqlite3
+text.txt
+staticfiles
+.env

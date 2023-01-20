@@ -7,7 +7,9 @@ from .models import (
     Contact,
     Purchase,
     Coupon,
-    OrderCoupon
+    OrderCoupon,
+    PasswordReset,
+    BulkMail
 )
 
 # Register your models here.
@@ -19,6 +21,9 @@ admin.site.register(Contact)
 admin.site.register(Purchase)
 admin.site.register(Coupon)
 admin.site.register(OrderCoupon)
+admin.site.register(PasswordReset)
+admin.site.register(BulkMail)
+
 
 
 class OrderCouponInline(admin.TabularInline):

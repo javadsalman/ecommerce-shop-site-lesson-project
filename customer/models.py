@@ -2,6 +2,11 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from django.utils import timezone
+from datetime import timedelta
+from django.utils import timezone
+from secrets import token_urlsafe
+from uuid import uuid4
+from django.urls import reverse
 # Create your models here.
 
 class Customer(models.Model):
@@ -87,8 +92,6 @@ class Purchase(models.Model):
     all_price = models.FloatField()
 
     
-
-    
 class Contact(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100)
@@ -96,4 +99,28 @@ class Contact(models.Model):
     message = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     
+
+class PasswordReset(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    expiry = models.DateField(null=True, blank=True)
+    uuid = models.UUIDField(default=uuid4, null=True, blank=True)
+    token = models.TextField(null=True, blank=True)
+    used = models.BooleanField(default=False)
     
+    def save(self, *args, **kwargs):
+        self.expiry = timezone.localdate() + timedelta(days=1)
+        self.token = token_urlsafe(100)
+        super().save(*args, **kwargs)
+        
+    def is_valid(self, token):
+        return not self.used and self.expiry > timezone.localdate() and self.token == token
+    
+    def get_absolute_url(self):
+        return reverse('customer:reset-password', kwargs={'uuid': str(self.uuid), 'token': self.token})
+    
+    
+class BulkMail(models.Model):
+    subject = models.CharField(max_length=200)
+    content = models.TextField()
+    customers = models.ManyToManyField(Customer)
+    created = models.DateField(auto_now_add=True)

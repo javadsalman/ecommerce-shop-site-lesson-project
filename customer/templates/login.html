@@ -28,8 +28,12 @@
                               <input type="checkbox" name="remember_me" class="form-check-input" id="exampleCheck1">
                               <label class="form-check-label" for="exampleCheck1">Remember Me</label>
                             </div>
+                            
                             <div class="d-flex justify-content-center">
                                 <button type="submit" class="btn btn-secondary">Submit</button>
+                            </div>
+                            <div class="text-dark text-center pt-3">
+                                <a href="{% url 'customer:reset-password-email' %}" class="text-dark">Forgot Password</a>
                             </div>
                           </form>
                     </div>

@@ -8,6 +8,10 @@ from .models import  (
     OrderCoupon,
     BascetItem
 )
+from django.core.mail import send_mail
+from .models import PasswordReset
+from django.conf import settings
+
 
 class RegisterForm(forms.Form):
     username = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', }))
@@ -46,8 +50,7 @@ class RegisterForm(forms.Form):
             email=email,
             password=password,
         )
-        new_customer = Customer.objects.create(user=new_user)
-        return new_customer
+        return new_user
     
     
 class ContactForm(forms.ModelForm):
@@ -121,3 +124,54 @@ class CheckoutForm(forms.ModelForm):
         
         bascet.delete()
         return order
+    
+    
+class ResetPasswordEmailForm(forms.Form):
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
+
+    def clean_email(self):
+        cleaned_data = self.cleaned_data
+        email = cleaned_data.get('email')
+        if email and not User.objects.filter(email=email).exists():
+            raise forms.ValidationError('Bele bir istifadeci yoxdur!')
+        return email
+        
+    def send_reset_mail(self, request):
+        cleaned_data = self.cleaned_data
+        email = cleaned_data.get('email')
+        user = User.objects.get(email=email)
+        password_reset = PasswordReset.objects.create(user=user)
+        url = request.build_absolute_uri(password_reset.get_absolute_url())
+        print('SHOW', settings.EMAIL_HOST_USER,
+                [email],)
+        try:
+            send_mail(
+                'Multi Shop Reset Password',
+                f'Please go to the this page to reset your password: {url}',
+                settings.EMAIL_HOST_USER,
+                [email],
+            )
+            return True
+        except Exception as message:
+            print('ERROR', message)
+            return False
+        
+class ResetPasswordForm(forms.Form):
+    password = forms.CharField(label='New Password', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    password_again = forms.CharField(label='New Password Again', widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+    def clean(self, *args, **kwargs):
+        cleaned_data = super().clean(*args, **kwargs)
+        password = cleaned_data.get('password')
+        password_again = cleaned_data.get('password_again')
+        
+        if password and password_again and password != password_again:
+            raise forms.ValidationError('Sifreler eyni deyil!')
+        
+    def change_password(self, password_reset):
+        password = self.cleaned_data.get('password')
+        user = password_reset.user
+        user.set_password(password)
+        user.save()
+        password_reset.used = True
+        password_reset.save()

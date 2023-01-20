@@ -142,7 +142,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = 'staticfiles/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
@@ -175,3 +176,20 @@ AWS_S3_CUSTOM_DOMAIN = '{}.s3.{}.amazonaws.com'.format(
 )
 
 LOGIN_URL = 'customer:login'
+
+
+EMAIL_HOST = getenv('EMAIL_HOST')
+EMAIL_PORT = int(getenv('EMAIL_PORT'))
+EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
+if getenv('EMAIL_USE') == 'SSL':
+    EMAIL_USE_SSL = True
+elif getenv('EMAIL_USE') == 'TLS':
+    EMAIL_USE_TLS = True
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR.parent / 'django_cache',
+    }
+}
