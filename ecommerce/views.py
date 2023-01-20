@@ -14,9 +14,7 @@ from django.views.generic import DetailView, ListView
 
 # Create your views here.
 
-@cache_page(3000)
 def home(request):
-    
     context = {
         'slide_campaigns': Campaign.objects.filter(slide=True),
         'campaigns': Campaign.objects.exclude(slide=True),
