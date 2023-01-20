@@ -1,10 +1,11 @@
 from django.urls import path
 from . import views
+from django.views.decorators.csrf import csrf_protect
 
 app_name = 'customer'
 
 urlpatterns = [
-    path('contact/', views.ContactView.as_view(), name='contact'),
+    path('contact/', csrf_protect(views.ContactView.as_view()), name='contact'),
     path('bascet/', views.bascet, name='bascet'),
     path('checkout/', views.checkout, name='checkout'),
     path('login/', views.login_view, name='login'),

@@ -11,8 +11,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import F, Sum
 from django.views.generic import TemplateView, View, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
-import requests
-import os
+from django.views.decorators.csrf import csrf_protect
+import requests, os
 
 RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY')
 
@@ -56,6 +56,7 @@ class ContactView(View):
 
 
 
+@csrf_protect
 def login_view(request):
     if request.method == 'GET':
         return render(request, 'login.html')
@@ -76,6 +77,7 @@ def logout_view(request):
     logout(request)
     return redirect('customer:login')
 
+@csrf_protect
 def register(request):
     if request.method == 'GET':
         form = RegisterForm()
@@ -147,8 +149,8 @@ def add_to_bascet(request, pk):
         return redirect('ecommerce:home')
 
 
-
 @login_required
+@csrf_protect
 def bascet(request):
     coupon_code = request.GET.get('coupon_code')
     coupon = Coupon.objects.filter(code=coupon_code).first()
@@ -181,6 +183,7 @@ def bascet(request):
     return render(request, 'bascet.html', context=context)
 
 @login_required
+@csrf_protect
 def update_bascet_quantity(request, pk):
     quantity = int(request.POST.get('quantity'))
     bascetitem = get_object_or_404(BascetItem, pk=pk)
@@ -197,6 +200,7 @@ def remove_bascet(request, pk):
     return redirect('customer:bascet')
 
 @login_required
+@csrf_protect
 def checkout(request):
     user = request.user
     form = CheckoutForm(initial={'first_name': user.first_name, 'last_name': user.last_name, 'email': user.email})
@@ -254,6 +258,7 @@ def change_currency(request, currency):
     return redirect(request.META.get('HTTP_REFERER'))
 
 
+@csrf_protect
 def reset_password(request, uuid, token):
     password_reset = get_object_or_404(PasswordReset, uuid=uuid)
     if password_reset.is_valid(token):
@@ -268,6 +273,7 @@ def reset_password(request, uuid, token):
     return redirect('customer:reset-password-notf', color='danger', message='Linkiniz duzgun deyil!')
     
 
+@csrf_protect
 def reset_password_email(request):
     form = ResetPasswordEmailForm()
     if request.method == 'POST':
