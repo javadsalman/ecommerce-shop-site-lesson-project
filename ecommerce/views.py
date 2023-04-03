@@ -30,20 +30,26 @@ class ProductListView(ListView):
     context_object_name = 'products'
     
     def get_paginate_by(self, *args, **kwargs):
+        # paginate by page count from query string or default 6
         return int(self.request.GET.get('page_by', 6))
     
     def get_queryset(self, *args, **kwargs):
         sorting = self.request.GET.get('sorting')
         all_products = Product.objects.all()
+        # search by trigram similarity of title
         if search:=self.request.GET.get('search'):
             all_products = all_products.annotate(similarity=TrigramWordSimilarity(search, 'title_az'))\
             .filter(similarity__gt=0.3).order_by('-similarity')
+            # # search by postgres search vector and make order by rank of search
+            # # that title has more weight than description and category and description has more weight than category
             # vector = SearchVector('title_az', weight='A') + SearchVector('description', weight='B') + SearchVector('category__title', weight='C')
             # all_products = all_products.annotate(rank=SearchRank(vector, SearchQuery(search), weights=[0.1, 0.5, 0.7, 0.8])).filter(rank__gte=0.3).order_by('-rank')
         
         filter_result = ProductFilter(self.request.GET, all_products)
         filtered_products = filter_result.qs
         if sorting:
+            # Ensure that null values are last by using nulls_last=True
+            # For details see https://docs.djangoproject.com/en/4.2/ref/models/expressions/#using-f-to-sort-null-values
             sorting = F(sorting[1:]).desc(nulls_last=True) if sorting[0] == '-' else F(sorting).asc(nulls_last=True)
             filtered_products = filtered_products.annotate(avg_review=Avg('review__star_count')).order_by(sorting)
 
