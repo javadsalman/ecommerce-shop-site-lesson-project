@@ -25,6 +25,7 @@ class ContactView(View):
     
     def post(self, request):
         form = ContactForm(data=request.POST)
+        # check recaptcha validation
         response = requests.post(' https://www.google.com/recaptcha/api/siteverify', {
             'secret': RECAPTCHA_SECRET_KEY,
             'response': request.POST.get('g-recaptcha-response')
@@ -32,6 +33,7 @@ class ContactView(View):
         recaptcha_result = response.json()
         success = recaptcha_result.get('success')
         score = recaptcha_result.get('score')
+        # if form is valid and recaptcha is valid and score is greater than 0.7 then save form
         if form.is_valid() and success and score > 0.7:
             form.save()
             return render(request, 'contact.html', context={'form': ContactForm(), 'status': 'success'})
@@ -55,7 +57,7 @@ class ContactView(View):
 #     return render(request, 'contact.html', context={'form': form})
 
 
-
+# use csrf_protect where it is needed
 @csrf_protect
 def login_view(request):
     if request.method == 'GET':
@@ -70,7 +72,7 @@ def login_view(request):
             nextUrl = request.GET.get('next')
             if not remember_me:
                 request.session.set_expiry(0)
-            return redirect(nextUrl or 'ecommerce:home')
+            return redirect('ecommerce:home')
         return render(request, 'login.html', context={'unsuccess': True})
 
 def logout_view(request):
@@ -85,11 +87,13 @@ def register(request):
         
     elif request.method == 'POST':
         form = RegisterForm(data=request.POST)
+        # the value of the checkbox of terms and conditions is 'on' if it is checked
         accepted = request.POST.get('accepted')
         if form.is_valid() and accepted:
             user = form.save()
             login(request, user)
             return redirect('ecommerce:home')
+        # check if user accepted terms and conditions
         elif not accepted:
             return render(request, 'register.html', context={'form': form, 'not_accepted':True})
         else:
@@ -105,6 +109,7 @@ def register(request):
 class WishlistView(LoginRequiredMixin, ListView):
     context_object_name = 'wishlist'
     template_name = 'wishlist.html'
+    # get the current user's wishlist
     def get_queryset(self):
         customer = self.request.user.customer
         return customer.wish_set.all()
@@ -152,17 +157,24 @@ def add_to_bascet(request, pk):
 @login_required
 @csrf_protect
 def bascet(request):
+    # coupon code by user
     coupon_code = request.GET.get('coupon_code')
+    # get coupon object by coupon code
     coupon = Coupon.objects.filter(code=coupon_code).first()
     customer = request.user.customer
     bascet = customer.bascetitem_set.all()
+    # get total price of bascet by multiplying price of each product by quantity
     bascet = bascet.annotate(total_price=F('product__price') * F('quantity'))
+    # get total price of bascet by summing total price of each product
     total_bascet_price = bascet.aggregate(total_bascet_price=Sum('total_price')).get('total_bascet_price') or 0
+    # get shipping price by multiplying total price of bascet by 7%
     shipping_price = total_bascet_price * 0.07
+    # get total price by adding shipping price to total price of bascet
     total_price = total_bascet_price + shipping_price
 
     coupon_discount = None
     total_price_with_coupon = None
+    # if coupon exists and is valid for customer then calculate total price with coupon and coupon discount
     if coupon:
         coupon_discount = total_price * coupon.discount_percent / 100
         total_price_with_coupon = total_price - coupon_discount
@@ -175,7 +187,9 @@ def bascet(request):
         'coupon': coupon,
         'total_price': total_price,
         'total_price_with_coupon': total_price_with_coupon,
+        # check if there is a coupon code and if it is valid
         'coupon_found_and_is_valid': coupon and coupon.is_valid(customer),
+        # check if there is a coupon code and it doesn't exist on database or it is not valid
         'coupone_code_exists_but_coupone_not_found_or_coupon_is_not_valid': bool(coupon_code and (not coupon or not coupon.is_valid(customer))),
         'coupon_code': coupon_code
     }
@@ -191,6 +205,7 @@ def update_bascet_quantity(request, pk):
         bascetitem.quantity = quantity
         bascetitem.save()
     else:
+        # if quantity is 0 then delete the bascet item
         bascetitem.delete()
     return redirect('customer:bascet')
 
@@ -250,7 +265,7 @@ def checkout(request):
     
     return render(request, 'checkout.html', context)
 
-
+# change currency and set currency ratio in session
 currency_eq = {'USD': 0.59, 'TRY': 11.04, 'EUR': 0.56, 'AZN': 1}
 def change_currency(request, currency):
     request.session['currency'] = currency
@@ -260,7 +275,9 @@ def change_currency(request, currency):
 
 @csrf_protect
 def reset_password(request, uuid, token):
+    # find password reset object by uuid
     password_reset = get_object_or_404(PasswordReset, uuid=uuid)
+    # check if token is valid
     if password_reset.is_valid(token):
         form = ResetPasswordForm()
         if request.method == 'POST':
@@ -279,17 +296,21 @@ def reset_password_email(request):
     if request.method == 'POST':
         form = ResetPasswordEmailForm(request.POST)
         if form.is_valid():
+            # send reset password email if email is valid
             result = form.send_reset_mail(request)
+            # if email is sent successfully then redirect to notification page
             if result:
                 return redirect('customer:reset-password-notf', color='info', message='Ugurla gonderildi!')
             else:
                 return redirect('customer:reset-password-notf', color='danger', message='Gonderilmede problem yasandi!')
     return render(request, 'reset-password-email.html', {'form': form})
 
-class ResetPasswordNotView(TemplateView):
+# view for notification page after reset password
+class ResetPasswordNotfView(TemplateView):
     template_name = 'reset-password-notf.html'
     
     def get_context_data(self, **kwargs):
+        # show notification message and color from url
         context = super().get_context_data(**kwargs)
         context.update(self.kwargs)
         return context

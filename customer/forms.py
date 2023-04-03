@@ -106,6 +106,7 @@ class CheckoutForm(forms.ModelForm):
             )
             coupon.used_customers.add(customer)
             
+        # Create purchases from bascet items at same time by using bulk_create
         purchases = []
         bascet = customer.bascetitem_set.all()
         for bi in bascet:
@@ -122,6 +123,7 @@ class CheckoutForm(forms.ModelForm):
             purchases.append(purchase)
         Purchase.objects.bulk_create(purchases)
         
+        # Delete bascet items after creating purchases
         bascet.delete()
         return order
     
@@ -140,10 +142,12 @@ class ResetPasswordEmailForm(forms.Form):
         cleaned_data = self.cleaned_data
         email = cleaned_data.get('email')
         user = User.objects.get(email=email)
+        # create password reset object for user
         password_reset = PasswordReset.objects.create(user=user)
+        # generate url for password reset
         url = request.build_absolute_uri(password_reset.get_absolute_url())
-        print('SHOW', settings.EMAIL_HOST_USER,
-                [email],)
+
+        # send email to user
         try:
             send_mail(
                 'Multi Shop Reset Password',
@@ -153,7 +157,6 @@ class ResetPasswordEmailForm(forms.Form):
             )
             return True
         except Exception as message:
-            print('ERROR', message)
             return False
         
 class ResetPasswordForm(forms.Form):
@@ -173,5 +176,6 @@ class ResetPasswordForm(forms.Form):
         user = password_reset.user
         user.set_password(password)
         user.save()
+        # set used to True for password reset object to prevent using it again
         password_reset.used = True
         password_reset.save()

@@ -5,13 +5,13 @@ from .models import Customer, BulkMail
 from django.core.mail import send_mass_mail
 from django.conf import settings
 
-
+# create customer when user is created
 @receiver(post_save, sender=User)
 def create_customer(sender, instance, created, **kwargs):
-    print('SHOW', instance, created)
     if created:
         Customer.objects.create(user=instance)
-        
+
+# send email to all customers when bulk mail is created        
 @receiver(post_save, sender=BulkMail)
 def bulk_mail_send(sender, instance, created, *args, **kwargs):
     emails = list(instance.customers.exclude(user__email='').values_list('user__email', flat=True))

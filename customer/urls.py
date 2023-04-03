@@ -20,5 +20,5 @@ urlpatterns = [
     path('change-currency/<str:currency>/', views.change_currency, name='change-currency'),
     path('reset-password/<str:uuid>/<str:token>/', views.reset_password, name='reset-password'),
     path('reset-password-email/', views.reset_password_email, name='reset-password-email'),
-    path('reset-password-notf/<str:color>/<str:message>/', views.ResetPasswordNotView.as_view(), name='reset-password-notf'),
+    path('reset-password-notf/<str:color>/<str:message>/', views.ResetPasswordNotfView.as_view(), name='reset-password-notf'),
 ]
